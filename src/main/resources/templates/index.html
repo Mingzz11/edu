@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link rel="stylesheet" th:href="@{/css/bootstrap3.3.4.min.css}" >
+    <link rel="stylesheet" th:href="@{/css/style.min.css}" >
+    <link rel="stylesheet" th:href="@{/css/materialdesignicons.min.css}" >
+    <script type="text/javascript" th:src="@{/js/jquery.js}"></script>
+    <script type="text/javascript" th:src="@{/js/bootstrap.min.js}"></script>
+    <link rel="stylesheet" th:href="@{/css/bootstrap-table.min.css}">
+    <script th:src="@{/js/bootstrap-table.min.js}"></script>
+    <script th:src="@{/js/bootstrap-table-zh-CN.min.js}"></script>
+    <!--消息提示框插件-->
+    <script type="text/javascript" th:src="@{/js/dream-msg.min.js}"></script>
+    <!--滚动条插件-->
+    <script type="text/javascript" th:src="@{/js/perfect-scrollbar.min.js}"></script>
+    <script type="text/javascript" th:src="@{/js/main.min.js}"></script>
+    <script type="text/javascript" th:inline="javascript">
+        $(document).ready(function () {
+            if (location.href.indexOf("#") == -1) {
+                //在当前页面地址加入"#"，使下次不再进入此判断
+                location.href = location.href + "#";
+                Dreamer.success("登录成功！");
+            }
+        });
+
+        function logout() {
+            /*<![CDATA[*/
+            var basePath = /*[[${#httpServletRequest.getScheme() + "://" + #httpServletRequest.getServerName() + ":" + #httpServletRequest.getServerPort() + #httpServletRequest.getContextPath()}]]*/;
+            if(confirm("确认退出系统?")){
+                $.ajax({type:'get',url:basePath+'/user/logout',dataType:'json',success:function (result) {
+                        if(result.code=='200'){
+                            Dreamer.success(result.message,1000,function () {
+                                location.href=basePath+'/user/loginview';
+                            })
+                        }
+                    }
+                });
+            }
+        }
+    </script>
+</head>
+<body>
+<div class="lyear-layout-web">
+    <div class="lyear-layout-container">
+        <!--左侧导航-->
+        <aside class="lyear-layout-sidebar">
+            <!-- logo -->
+            <div id="logo" class="sidebar-header">
+                <a href="#"><img th:src="@{/img/logo-1.png}"/></a>
+            </div>
+            <div class="lyear-layout-sidebar-scroll">
+
+                <nav class="sidebar-main" shiro:hasRole="学生">
+                    <div th:replace="../templates/student/stuInfo :: stuInfo "></div>
+                    <ul class="nav nav-drawer">
+                        <li class="nav-item active nav-item-has-subnav open">
+                            <a href="javascript:void(0)"><i class="mdi mdi-palette"></i> 选课相关</a>
+                            <ul class="nav nav-subnav active">
+                                <li> <a th:href="@{/user/chooseCourse}">选课</a> </li>
+                                <li> <a th:href="@{/choosecourse/showChooseResult}">选课结果</a> </li>
+                                <li><a th:href="@{/user/history}">历史课程</a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-item nav-item-has-subnav open">
+                            <a href="javascript:void(0)"><i class="mdi mdi-file-outline"></i> 成绩相关</a>
+                            <ul class="nav nav-subnav">
+                                <li><a th:href="@{/grade/thisGrade}">查看本学期成绩</a></li>
+                                <li><a th:href="@{/grade/historyGrade}">查看历史课程成绩</a></li>
+                            </ul>
+                        </li>
+                    </ul>
+                </nav>
+                <nav class="sidebar-main" shiro:hasRole="系统管理员">
+                    <div th:replace="../templates/admin/admin :: admin"></div>
+                    <ul class="nav nav-drawer">
+                        <li class="nav-item active nav-item-has-subnav open">
+                            <a href="javascript:void(0)"><i class="mdi mdi-palette"></i> 选课管理</a>
+                            <ul class="nav nav-subnav active">
+                                <li><a href="#" onclick="openChooseCourse()">开放选课</a></li>
+                                <li><a href="#" onclick="closeChooseCourse()">关闭选课</a></li>
+                            </ul>
+                        </li>
+                    </ul>
+                </nav>
+                <nav class="sidebar-main" shiro:hasRole="教务管理员">
+                    <ul class="nav nav-drawer">
+                        <li class="nav-item active nav-item-has-subnav open">
+                            <a href="javascript:void(0)"><i class="mdi mdi-palette"></i> 课程管理</a>
+                            <ul class="nav nav-subnav active">
+                                <li><a th:href="@{/user/lookAllCourse}">查看学院所有课程</a></li>
+                                <li><a th:href="@{/user/addCourse}">增设课程</a></li>
+                            </ul>
+                        </li>
+                    </ul>
+                </nav>
+                <nav class="sidebar-main" shiro:hasRole="老师">
+                    <div th:replace="../templates/teacher/teacher :: teacher"></div>
+                    <ul class="nav nav-drawer">
+                        <li class="nav-item active nav-item-has-subnav open">
+                            <a href="javascript:void(0)"><i class="mdi mdi-palette"></i> 课程相关</a>
+                            <ul class="nav nav-subnav active">
+                                <li class="active"><a href="#">查看本学期开课</a></li>
+                            </ul>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+
+        </aside>
+        <!--End 左侧导航-->
+        <!--头部信息-->
+        <header class="lyear-layout-header">
+
+            <nav class="navbar navbar-default">
+                <div class="topbar">
+
+                    <div class="topbar-left">
+                        <div class="lyear-aside-toggler">
+                            <span class="lyear-toggler-bar"></span>
+                            <span class="lyear-toggler-bar"></span>
+                            <span class="lyear-toggler-bar"></span>
+                        </div>
+                        <span class="navbar-page-title">主页</span>
+                    </div>
+
+                    <ul class="topbar-right">
+                        <li class="dropdown dropdown-profile" shiro:hasRole="学生">
+                            <a href="javascript:void(0)" data-toggle="dropdown">
+                                <span><span id="stuName" th:text="${session.userinfo.stuName}"></span><span class="caret"></span></span>
+                                <input type="hidden" th:value="${session.userinfo.userId}" id="UserID" />
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-right" style="margin-top: 14px;margin-left: 20px;">
+                                <li> <a th:href="@{/user/stuIndex}"><i class="mdi mdi-account"></i> 个人信息</a></li>
+                                <li class="divider"></li>
+                                <li> <a href="#" onclick="logout()"><i class="mdi mdi-logout-variant"></i> 退出登录</a> </li>
+                            </ul>
+                        </li>
+                        <li class="dropdown dropdown-profile" shiro:hasRole="教务管理员">
+                            <a href="javascript:void(0)" data-toggle="dropdown">
+                                <span><span id="stuName" th:text="${session.userinfo.stuName}"></span><span class="caret"></span></span>
+                                <input type="hidden" th:value="${session.userinfo.userId}" id="UserID" />
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-right" style="margin-top: 14px;margin-left: 20px;">
+                                <li> <a href="#" onclick="logout()"><i class="mdi mdi-logout-variant"></i> 退出登录</a> </li>
+                            </ul>
+                        </li>
+                        <li class="dropdown dropdown-profile" shiro:hasRole="系统管理员">
+                            <a href="javascript:void(0)" data-toggle="dropdown">
+                                <span><span id="stuName" th:text="${session.userinfo.stuName}"></span><span class="caret"></span></span>
+                                <input type="hidden" th:value="${session.userinfo.userId}" id="UserID" />
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-right" style="margin-top: 14px;margin-left: 20px;">
+                                <li> <a href="#" onclick="logout()"><i class="mdi mdi-logout-variant"></i> 退出登录</a> </li>
+                            </ul>
+                        </li>
+                        <li class="dropdown dropdown-profile" shiro:hasRole="老师">
+                            <a href="javascript:void(0)" data-toggle="dropdown">
+                                <span><span id="stuName" th:text="${session.userinfo.stuName}"></span><span class="caret"></span></span>
+                                <input type="hidden" th:value="${session.userinfo.userId}" id="UserID" />
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-right" style="margin-top: 14px;margin-left: 20px;">
+                                <li> <a href="#" onclick="logout()"><i class="mdi mdi-logout-variant"></i> 退出登录</a> </li>
+                            </ul>
+                        </li>
+                    </ul>
+
+                </div>
+            </nav>
+
+        </header>
+        <!--End 头部信息-->
+
+        <!--页面主要内容-->
+        <main class="lyear-layout-content">
+
+            <div class="container-fluid">
+
+                <div class="row" shiro:hasRole="学生">
+
+                    <div class="col-lg-12">
+                        <div class="card">
+                            <div class="card-header">
+                                个人信息
+                            </div>
+                            <div class="card-body" style="height: 620px;padding: 0px;">
+                                    <div class="col-lg-6" id="info-panel" style="border-right: 1px solid #eeeeee;height: 300px;">
+                                        <p style="color: #333333;font-weight: bold;font-size: 25px;" th:text="${session.userinfo.stuName}"></p>
+                                        <span id="college" style="font-size: 12px;margin-right: 2px;" ></span> <span id="sclass" style="font-size: 12px" th:text="${session.userinfo.sclass}"></span>
+                                    </div>
+                                    <div class="col-lg-6" style="height: 300px;">
+                                        <h4>通知</h4>
+                                    </div>
+                                    <div class="col-lg-6" id="info-panel2" style="border: 1px solid #eeeeee;height: 300px;margin-top: 20px;">
+                                        <h4>课表</h4>
+                                    </div>
+                                    <div class="col-lg-6" style="height: 300px;">
+                                    </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row" shiro:hasRole="系统管理员">
+                    <div class="col-lg-12">
+                        <div class="card">
+                            <div class="card-header">
+                                <h4>设置当前学期</h4>
+                            </div>
+                            <div class="card-body">
+                                <p style="color: #333333;" id="currentTerm"></p>
+                                <div class="col-xs-2">
+                                    <select id="select_term" class="form-control">
+                                        <option value="0">请选择学期</option>
+                                    </select>
+                                </div>
+                                <input type="button" class="btn btn-info" value="确认" onclick="setTerm()" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row" shiro:hasRole="老师">
+                    <div class="col-lg-12">
+                        <div class="card">
+                            <div class="card-header">
+                                <h4>本学期开设课程</h4>
+                            </div>
+                            <div class="card-body">
+                                <input  class="btn btn-info" value="查询本学期开设课程" type="button" onclick="initTable()" />
+                                <div class="table-responsive" >
+                                    <table class="table table-bordered" id="index_tab">
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                                        <h4 class="modal-title" id="myModalLabel">学生名单</h4>
+                                    </div>
+                                    <div class="modal-body">
+                                        <h4 id="courseName"></h4>
+                                        <div class="table-responsive" >
+                                            <table class="table table-bordered">
+                                                <thead>
+                                                <tr>
+                                                    <th>序号</th>
+                                                    <th>姓名</th>
+                                                    <th>班级</th>
+                                                    <th>性别</th>
+                                                    <th>联系方式</th>
+                                                </tr>
+                                                </thead>
+                                                <tbody id="student_tab">
+
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                                    </div>
+                                </div><!-- /.modal-content -->
+                            </div><!-- /.modal -->
+                        </div>
+                        <div class="modal fade" id="myModal2" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+                            <div class="modal-dialog" style="height: 600px;width: 1200px;">
+                                <div class="modal-content" style="height: 600px;width: 1200px;">
+                                    <div class="modal-header">
+                                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                                        <h4 class="modal-title" id="myModalLabel2">课程成绩</h4>
+                                    </div>
+                                    <div class="modal-body" style="height: 450px;width: 1200px;">
+                                        <h4 id="courseName1"></h4>
+                                        <h3 id="teacherInfo"></h3>
+                                        <div class="table-responsive" >
+                                            <table class="table table-bordered">
+                                                <thead>
+                                                <tr>
+                                                <th>序号</th>
+                                                <th>学号</th>
+                                                <th>姓名</th>
+                                                <th>性别</th>
+                                                <th>班级</th>
+                                                <th>平时成绩</th>
+                                                <th>期末成绩</th>
+                                                <th>总成绩</th>
+                                                <th>操作</th>
+                                                </tr>
+                                                </thead>
+                                                <tbody id="grade_tab">
+
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                                    </div>
+                                </div><!-- /.modal-content -->
+                            </div><!-- /.modal -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+        <!--End 页面主要内容-->
+    </div>
+</div>
+</body>
+</html>

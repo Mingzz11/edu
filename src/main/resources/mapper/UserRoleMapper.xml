@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.edu.mapper.UserRoleMapper">
+  <resultMap id="BaseResultMap" type="com.edu.entity.UserRole">
+    <id column="id"  property="id" />
+    <result column="user_id"  property="userId" />
+    <result column="role_id" property="roleId" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    id, user_id, role_id
+  </sql>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from user_role
+    where id = #{id}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+    delete from user_role
+    where id = #{id}
+  </delete>
+  <insert id="insert" parameterType="com.edu.entity.UserRole">
+    insert into user_role (id, user_id, role_id
+      )
+    values (#{id}, #{userId}, #{roleId}
+      )
+  </insert>
+  <insert id="insertSelective" parameterType="com.edu.entity.UserRole">
+    insert into user_role
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        id,
+      </if>
+      <if test="userId != null">
+        user_id,
+      </if>
+      <if test="roleId != null">
+        role_id,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        #{id},
+      </if>
+      <if test="userId != null">
+        #{userId},
+      </if>
+      <if test="roleId != null">
+        #{roleId},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.edu.entity.UserRole">
+    update user_role
+    <set>
+      <if test="userId != null">
+        user_id = #{userId},
+      </if>
+      <if test="roleId != null">
+        role_id = #{roleId},
+      </if>
+    </set>
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.edu.entity.UserRole">
+    update user_role
+    set user_id = #{userId},
+      role_id = #{roleId}
+    where id = #{id}
+  </update>
+</mapper>

@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<div th:fragment="admin">
+    <script type="text/javascript" th:inline="javascript">
+        /*<![CDATA[*/
+        var basePath = /*[[${#httpServletRequest.getScheme() + "://" + #httpServletRequest.getServerName() + ":" + #httpServletRequest.getServerPort() + #httpServletRequest.getContextPath()}]]*/;
+        function openChooseCourse() {//开启选课
+            if(confirm("确认开启选课？")){
+                $.ajax({
+                    type:"post",
+                    dataType:"json",
+                    url:basePath+"/course/open",
+                    success:function (result) {
+                        if(result.code=="200"){
+                            Dreamer.success(result.message);//js消息提示框插件
+                        }
+                    }
+                })
+            }
+        }
+        function closeChooseCourse() {
+             if(confirm("确认关闭选课？")){
+                 $.ajax({
+                     type:"post",
+                     dataType:"json",
+                     url:basePath+"/course/close",
+                     success:function (result) {
+                         if(result.code=="200"){
+                             Dreamer.success(result.message);
+                         }
+                     }
+                 })
+             }
+        }
+        $(document).ready(function () {
+            $.ajax({
+                type:'get',
+                dataType:"json",
+                url:basePath+'/term/getAllTerm?notAll=1',
+                success:function (result) {
+                    $.each(result.list,function (i,term) {
+                        $("#select_term").append("<option value='"+term.termId+"'>"+term.termName+"</option>");
+                        if(term.termStatus==1){
+                            $("#currentTerm").text("当前学期为: "+term.termName);
+                        }
+                    });
+                }
+            });
+        })
+        function setTerm() {
+            if(confirm("确认设置当前学期为:"+$("#select_term option:selected").text()+"?")){
+                $.ajax({
+                    type:'get',
+                    dataType:"json",
+                    url:basePath+'/term/setTerm?termId='+$("#select_term").val(),
+                    success:function (result) {
+                        if(result.code==200){
+                            Dreamer.success(result.message);
+                            $("#currentTerm").text("当前学期为: "+result.data.termName);
+                        }
+                    }
+                })
+            }
+        }
+    </script>
+</div>
+</body>
+</html>

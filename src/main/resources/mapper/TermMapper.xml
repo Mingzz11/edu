@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.edu.mapper.TermMapper">
+  <sql id="select">
+        term_id, term_name, term_status
+    </sql>
+  <resultMap id="termMap" type="com.edu.entity.Term">
+    <id column="term_id" property="termId"/>
+    <result column="term_name" property="termName"/>
+    <result column="term_status" property="termStatus"/>
+  </resultMap>
+  <select id="getAllTerm"  resultMap="termMap">
+    select <include refid="select"></include>
+    from term
+    where term_status != 2
+    order by term_id desc
+  </select>
+  <select id="selectOne" resultMap="termMap">
+    select <include refid="select"></include>
+    from term
+    where term_status=#{term_status}
+  </select>
+  <update id="updateById" parameterType="com.edu.entity.Term">
+    update term
+    <set>
+      <if test="termName != null">
+        term_name = #{termName},
+      </if>
+      <if test="termStatus != null">
+        term_status = #{termStatus},
+      </if>
+    </set>
+    where term_id = #{termId}
+  </update>
+  <select id="selectTermById" parameterType="Integer" resultMap="termMap">
+    select <include refid="select"></include>
+    from term
+    where term_id=#{termId}
+  </select>
+</mapper>

@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.edu.mapper.ChooseCourseMapper">
+  <resultMap id="BaseResultMap" type="com.edu.entity.ChooseCourse">
+    <id column="user_id" jdbcType="INTEGER" property="userId" />
+    <id column="course_id" jdbcType="INTEGER" property="courseId" />
+    <result column="usual_performance" jdbcType="DOUBLE" property="usualPerformance" />
+    <result column="end_performance" jdbcType="DOUBLE" property="endPerformance" />
+    <result column="total_performance" jdbcType="DOUBLE" property="totalPerformance" />
+    <result column="status" jdbcType="INTEGER" property="status" />
+    <result column="is_pass" jdbcType="VARCHAR" property="isPass" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    user_id, course_id, usual_performance, end_performance, total_performance, status, 
+    is_pass
+  </sql>
+<!-- 本学期课程成绩 -->
+  <select id="selectChooseCourseByCourseIdUserId" resultMap="BaseResultMap">
+    select <include refid="Base_Column_List"></include>
+    from choose_course
+    where user_id = #{userId} and course_id = #{courseId}
+  </select>
+<!--  -->
+  <select id="selectByPrimaryKey" parameterType="map" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from choose_course
+    where user_id = #{userId,jdbcType=INTEGER}
+      and course_id = #{courseId,jdbcType=INTEGER}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="map">
+    delete from choose_course
+    where user_id = #{userId,jdbcType=INTEGER}
+      and course_id = #{courseId,jdbcType=INTEGER}
+  </delete>
+<!-- 退课 -->
+  <delete id="deleteChooseCourse" >
+        delete from choose_course
+        where user_id = #{userId} and course_id = #{courseId}
+  </delete>
+<!--   -->
+  <insert id="insertChooseCourse">
+        insert into choose_course(user_id, course_id)
+        values (#{userId}, #{courseId})
+    </insert>
+  <insert id="insert" parameterType="com.edu.entity.ChooseCourse">
+    insert into choose_course (user_id, course_id, usual_performance, 
+      end_performance, total_performance, status, 
+      is_pass)
+    values (#{userId,jdbcType=INTEGER}, #{courseId,jdbcType=INTEGER}, #{usualPerformance,jdbcType=DOUBLE}, 
+      #{endPerformance,jdbcType=DOUBLE}, #{totalPerformance,jdbcType=DOUBLE}, #{status,jdbcType=INTEGER}, 
+      #{isPass,jdbcType=VARCHAR})
+  </insert>
+  <insert id="insertSelective" parameterType="com.edu.entity.ChooseCourse">
+    insert into choose_course
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="userId != null">
+        user_id,
+      </if>
+      <if test="courseId != null">
+        course_id,
+      </if>
+      <if test="usualPerformance != null">
+        usual_performance,
+      </if>
+      <if test="endPerformance != null">
+        end_performance,
+      </if>
+      <if test="totalPerformance != null">
+        total_performance,
+      </if>
+      <if test="status != null">
+        status,
+      </if>
+      <if test="isPass != null">
+        is_pass,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="userId != null">
+        #{userId},
+      </if>
+      <if test="courseId != null">
+        #{courseId},
+      </if>
+      <if test="usualPerformance != null">
+        #{usualPerformance},
+      </if>
+      <if test="endPerformance != null">
+        #{endPerformance},
+      </if>
+      <if test="totalPerformance != null">
+        #{totalPerformance},
+      </if>
+      <if test="status != null">
+        #{status},
+      </if>
+      <if test="isPass != null">
+        #{isPass},
+      </if>
+    </trim>
+  </insert>
+<!--   成绩录入-->
+  <update id="updateByPrimaryKeySelective" parameterType="com.edu.entity.ChooseCourse">
+    update choose_course
+    <set>
+      <if test="usualPerformance != null">
+        usual_performance = #{usualPerformance},
+      </if>
+      <if test="endPerformance != null">
+        end_performance = #{endPerformance},
+      </if>
+      <if test="totalPerformance != null">
+        total_performance = #{totalPerformance},
+      </if>
+      <if test="status != null">
+        status = #{status},
+      </if>
+      <if test="isPass != null">
+        is_pass = #{isPass},
+      </if>
+    </set>
+    where user_id = #{userId}
+      and course_id = #{courseId}
+  </update>
+<!-- 成绩录入 -->
+  <update id="updateByPrimaryKey" parameterType="com.edu.entity.ChooseCourse">
+    update choose_course
+    set usual_performance = #{usualPerformance,jdbcType=DOUBLE},
+      end_performance = #{endPerformance,jdbcType=DOUBLE},
+      total_performance = #{totalPerformance,jdbcType=DOUBLE},
+      status = #{status,jdbcType=INTEGER},
+      is_pass = #{isPass,jdbcType=VARCHAR}
+    where user_id = #{userId,jdbcType=INTEGER}
+      and course_id = #{courseId,jdbcType=INTEGER}
+  </update>
+</mapper>

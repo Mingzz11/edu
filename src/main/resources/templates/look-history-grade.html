@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link rel="stylesheet" th:href="@{/css/bootstrap3.3.4.min.css}" >
+    <link rel="stylesheet" th:href="@{/css/style.min.css}" >
+    <link rel="stylesheet" th:href="@{/css/materialdesignicons.min.css}" >
+    <script type="text/javascript" th:src="@{/js/jquery.js}"></script>
+    <script type="text/javascript" th:src="@{/js/bootstrap.min.js}"></script>
+    <link rel="stylesheet" th:href="@{/css/bootstrap-table.min.css}">
+    <script th:src="@{/js/bootstrap-table.min.js}"></script>
+    <script th:src="@{/js/bootstrap-table-zh-CN.min.js}"></script>
+    <!--消息提示框插件-->
+    <script type="text/javascript" th:src="@{/js/dream-msg.min.js}"></script>
+    <!--滚动条插件-->
+    <script type="text/javascript" th:src="@{/js/perfect-scrollbar.min.js}"></script>
+    <script type="text/javascript" th:src="@{/js/main.min.js}"></script>
+    <script type="text/javascript" th:inline="javascript">
+        /*<![CDATA[*/
+        var basePath = /*[[${#httpServletRequest.getScheme() + "://" + #httpServletRequest.getServerName() + ":" + #httpServletRequest.getServerPort() + #httpServletRequest.getContextPath()}]]*/;
+        $(document).ready(function () {
+            $.ajax({
+                type:'get',
+                dataType:"json",
+                url:basePath+'/term/getAllTerm',
+                success:function (result) {
+                      $.each(result.list,function (i,term) {
+                         $("#select_term").append("<option value='"+term.termId+"'>"+term.termName+"</option>");
+                      });
+                }
+            })
+        });
+        function findHistoryCourse() {
+            var termId = $("#select_term").val();
+            initTable(termId);
+        }
+        function initTable(termId){
+            var UserId =$("#UserID").val();
+            //先销毁表格
+            $('#index_tab').bootstrapTable('destroy');
+            $('#index_tab').bootstrapTable({
+                method: 'get', // 服务器数据的请求方式 get or post
+                url: basePath+'/grade/showHistory?userId='+UserId+'&term='+termId, // 服务器数据的加载地址
+                pagination: true, //是否显示分页（*）
+                cache: false, //是否使用缓存，默认为true，所以一般情况下需要设置一下这个属性（*）
+                sidePagination: "server", //分页方式：client客户端分页，server服务端分页（*）
+                pageNumber: 1,//初始化加载第一页，默认第一页
+                pageSize: 5, //每页的记录行数（*）
+                pageList: [5, 10, 20, 30], //可供选择的每页的行数（*）
+                contentType: "application/x-www-form-urlencoded",//ajax的请求，表单提交或上传文件的常用的资源类型。
+                queryParams : function(params) {//上传服务器的参数
+                    var temp = {
+                        limit : this.limit, // 页面大小
+                        offset : this.offset, // 页码
+                        pageNum : this.pageNumber,//后台分页的页码
+                        pageSize : this.pageSize,//后台分页的页面大小
+                    };
+                    return temp;
+                },
+                responseHandler: function (res) {
+                    console.log(res);
+                    return{
+                        "rows":res.data.list,
+                        "total":res.data.total
+                    }
+                },
+                columns: [{
+                    field: 'course.courseId',
+                    title: '序号',
+                    align:'center'
+                },{
+                    field:'course.courseTerm',
+                    title:'学期',
+                    align:'center'
+                },{
+                    field: 'course.courseCode',
+                    title: '课程代码',
+                    align:'center'
+                }, {
+                    field: 'course.courseName',
+                    title: '课程名称',
+                    align:'center'
+                },{
+                    field:'course.courseType',
+                    title:'性质',
+                    align:'center'
+                },{
+                    field:'course.courseCredit',
+                    title:'学分',
+                    align:'center'
+                },{
+                    field:'teacher',
+                    title:'老师',
+                    align:'center'
+                },{
+                    field:'grade.usualPerformance',
+                    title:'平时成绩',
+                    align:'center'
+                },{
+                    field:'grade.endPerformance',
+                    title:'期末成绩',
+                    align:'center'
+                }, {
+                    field: 'grade.totalPerformance',
+                    title: '总成绩',
+                    align:'center'
+                },{
+                    field:'grade.isPass',
+                    title:'是否通过',
+                    align:'center'
+                }
+                ]
+            });
+            /*]]>*/
+        }
+        function logout() {
+            if(confirm("确认退出系统?")){
+                $.ajax({type:'get',url:basePath+'/user/logout',dataType:'json',success:function (result) {
+                        if(result.code=='200'){
+                            Dreamer.success(result.message,1000,function () {
+                                location.href=basePath+'/user/loginview';
+                            })
+                        }
+                    }});
+            }
+        }
+    </script>
+</head>
+<body>
+
+<div class="lyear-layout-web">
+    <div class="lyear-layout-container">
+        <!--左侧导航-->
+        <aside class="lyear-layout-sidebar">
+
+            <!-- logo -->
+            <div id="logo" class="sidebar-header">
+                <a href="#"><img th:src="@{/img/logo-1.png}"/></a>
+            </div>
+            <div class="lyear-layout-sidebar-scroll">
+
+                <nav class="sidebar-main">
+                    <ul class="nav nav-drawer">
+                        <li class="nav-item nav-item-has-subnav open" shiro:hasRole="学生" >
+                            <a href="javascript:void(0)"><i class="mdi mdi-palette"></i> 选课相关</a>
+                            <ul class="nav nav-subnav active">
+                                <li>  <a th:href="@{/user/chooseCourse}">选课</a> </li>
+                                <li > <a th:href="@{/choosecourse/showChooseResult}">选课结果</a> </li>
+                                <li><a th:href="@{/user/history}">历史课程</a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-item active nav-item-has-subnav open">
+                            <a href="javascript:void(0)"><i class="mdi mdi-file-outline"></i> 成绩相关</a>
+                            <ul class="nav nav-subnav">
+                                <li><a th:href="@{/grade/thisGrade}">查看本学期成绩</a></li>
+                                <li  class="active"><a>查看历史课程成绩</a></li>
+                            </ul>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+
+        </aside>
+        <!--End 左侧导航-->
+        <!--头部信息-->
+        <header class="lyear-layout-header">
+
+            <nav class="navbar navbar-default">
+                <div class="topbar">
+
+                    <div class="topbar-left">
+                        <div class="lyear-aside-toggler">
+                            <span class="lyear-toggler-bar"></span>
+                            <span class="lyear-toggler-bar"></span>
+                            <span class="lyear-toggler-bar"></span>
+                        </div>
+                    </div>
+
+                    <ul class="topbar-right">
+                        <li class="dropdown dropdown-profile">
+                            <a href="javascript:void(0)" data-toggle="dropdown">
+                                <span><span id="stuName" th:text="${session.userinfo.stuName}"></span><span class="caret"></span></span>
+                                <input type="hidden" th:value="${session.userinfo.userId}" id="UserID" />
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-right" style="margin-top: 14px;margin-left: 20px;">
+                                <li> <a th:href="@{/user/stuIndex}"><i class="mdi mdi-account"></i> 个人信息</a></li>
+                                <li> <a href="#" onclick="logout()"><i class="mdi mdi-logout-variant"></i> 退出登录</a> </li>
+                            </ul>
+                        </li>
+                    </ul>
+
+                </div>
+            </nav>
+
+        </header>
+        <!--End 头部信息-->
+
+        <!--页面主要内容-->
+        <main class="lyear-layout-content">
+
+            <div class="container-fluid">
+
+                <div class="row" shiro:hasRole="学生">
+
+                    <div class="col-lg-12">
+                        <div class="card">
+                            <div class="card-header">
+                                <h4>历史课程</h4>
+
+                            </div>
+                            <div class="card-body">
+                                <div class="col-xs-2">
+                                    <select id="select_term" class="form-control" placeholder="请选择学期">
+
+                                    </select>
+                                </div>
+                                <input type="button" class="btn btn-info" value="确认" onclick="findHistoryCourse()" />
+                                <div class="table-responsive" >
+                                    <table class="table table-bordered" id="index_tab">
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+        <!--End 页面主要内容-->
+    </div>
+</div>
+</body>
+</html>

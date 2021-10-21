@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.edu.mapper.UserMapper">
+  <resultMap id="BaseResultMap" type="com.edu.entity.User">
+    <id column="user_id"  property="userId" />
+    <result column="username"  property="username" />
+    <result column="password"  property="password" />
+    <result column="salt"  property="salt" />
+    <result column="stu_name"  property="stuName" />
+    <result column="college_id"  property="collegeId" />
+    <result column="sex"  property="sex" />
+    <result column="tel"  property="tel" />
+    <result column="sclass" property="sclass" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    user_id, username, password, salt, stu_name, college_id, sex, tel, sclass
+  </sql>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+  select
+  <include refid="Base_Column_List" />
+  from user
+  where user_id = #{userId}
+</select>
+  <select id="selectUserId" parameterType="String" resultType="com.edu.entity.User">
+    select user_id as userId,stu_name as stuName,college_id as collegeId,sex,tel,sclass
+    from user
+    where username = #{username}
+  </select>
+<!-- 查找用户 -->
+  <select id="findByUserName" parameterType="String" resultMap="BaseResultMap">
+    select
+    <include refid="Base_Column_List" />
+    from user
+    where username = #{username}
+  </select>
+<!-- 查找用户的角色 -->
+  <select id="findRolesByUserName" parameterType="String" resultMap="userMap">
+    select u.username,r.role_id,r.role_name rname
+    FROM user u
+    left join user_role ur on u.user_id = ur.user_id
+    left join role r on r.role_id = ur.role_id
+    WHERE u.username=#{username}
+  </select>
+<!-- 查找角色的权限信息 -->
+  <select id="findPermissionByUserId" parameterType="Integer" resultType="com.edu.entity.Permission">
+    select p.permission_id as permissionId,p.permission_code as permissionCode,p.permission_name as permissionName,r.role_name as roleName
+    FROM role r
+    left join role_permission rp on r.role_id = rp.role_id
+    left join permission p on rp.permission_id = p.permission_id
+    WHERE r.role_id=#{userId}
+  </select>
+  <resultMap id="userMap" type="com.edu.entity.User">
+    <id column="user_id" property="userId"/>
+    <result column="username" property="username"/>
+    <collection property="roles" javaType="list" ofType="com.edu.entity.Role">
+      <id column="role_id" property="roleId"/>
+      <result column="rname" property="roleName"/>
+    </collection>
+  </resultMap>
+<!-- 查找课程学生名单 -->
+  <select id="getStudentListByCourseId" resultMap="BaseResultMap">
+    select <include refid="Base_Column_List"></include>
+    from user natural join choose_course
+    where course_id = #{courseId}
+  </select>
+<!--  -->
+<!-- 获取学院所有教师 -->
+  <select id="getAllTeachersByCollegeId" resultMap="BaseResultMap">
+    select <include refid="Base_Column_List"></include>
+    from user natural join user_role
+    where college_id = #{collegeId} and role_id = 2
+  </select>
+  <update id="updateUser" parameterType="com.edu.entity.User">
+     update user
+    <set>
+    <if test="password != null">
+      password = #{password},
+    </if>
+    <if test="salt != null">
+      salt = #{salt}
+    </if>
+    </set>
+    where user_id=#{userId}
+  </update>
+<!--  -->
+<!-- 用户注册 <insert id="save" parameterType="com.edu.entity.User" useGeneratedKeys="true">-->
+<!--    insert into user-->
+<!--    <trim prefix="(" suffix=")" suffixOverrides=",">-->
+<!--      <if test="userId != null">-->
+<!--        user_id,-->
+<!--      </if>-->
+<!--      <if test="username != null">-->
+<!--        username,-->
+<!--      </if>-->
+<!--      <if test="password != null">-->
+<!--        password,-->
+<!--      </if>-->
+<!--      <if test="salt != null">-->
+<!--        salt,-->
+<!--      </if>-->
+<!--      <if test="stuName != null">-->
+<!--        stu_name,-->
+<!--      </if>-->
+<!--      <if test="collegeId != null">-->
+<!--        school_id,-->
+<!--      </if>-->
+<!--      <if test="sex != null">-->
+<!--        sex,-->
+<!--      </if>-->
+<!--      <if test="tel != null">-->
+<!--        tel,-->
+<!--      </if>-->
+<!--      <if test="sclass != null">-->
+<!--        sclass,-->
+<!--      </if>-->
+<!--    </trim>-->
+<!--    <trim prefix="values (" suffix=")" suffixOverrides=",">-->
+<!--      <if test="userId != null">-->
+<!--        #{userId,jdbcType=INTEGER},-->
+<!--      </if>-->
+<!--      <if test="username != null">-->
+<!--        #{username,jdbcType=VARCHAR},-->
+<!--      </if>-->
+<!--      <if test="password != null">-->
+<!--        #{password,jdbcType=VARCHAR},-->
+<!--      </if>-->
+<!--      <if test="salt != null">-->
+<!--        #{salt,jdbcType=VARCHAR},-->
+<!--      </if>-->
+<!--      <if test="stuName != null">-->
+<!--        #{stuName,jdbcType=VARCHAR},-->
+<!--      </if>-->
+<!--      <if test="collegeId != null">-->
+<!--        #{collegeId,jdbcType=INTEGER},-->
+<!--      </if>-->
+<!--      <if test="sex != null">-->
+<!--        #{sex,jdbcType=VARCHAR},-->
+<!--      </if>-->
+<!--      <if test="tel != null">-->
+<!--        #{tel,jdbcType=VARCHAR},-->
+<!--      </if>-->
+<!--      <if test="sclass != null">-->
+<!--        #{sclass,jdbcType=VARCHAR},-->
+<!--      </if>-->
+<!--    </trim>-->
+<!--  </insert>-->
+</mapper>

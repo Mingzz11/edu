@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.edu.mapper.CollegeMapper">
+  <resultMap id="BaseResultMap" type="com.edu.entity.College">
+    <id column="college_id" jdbcType="INTEGER" property="collegeId" />
+    <result column="college_name" jdbcType="VARCHAR" property="collegeName" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    college_id, college_name
+  </sql>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from college
+    where college_id = #{collegeId}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+    delete from college
+    where college_id = #{collegeId}
+  </delete>
+  <insert id="insert" parameterType="com.edu.entity.College">
+    insert into college (college_id, college_name)
+    values (#{collegeId}, #{collegeName})
+  </insert>
+  <insert id="insertSelective" parameterType="com.edu.entity.College">
+    insert into college
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="collegeId != null">
+        college_id,
+      </if>
+      <if test="collegeName != null">
+        college_name,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="collegeId != null">
+        #{collegeId},
+      </if>
+      <if test="collegeName != null">
+        #{collegeName},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.edu.entity.College">
+    update college
+    <set>
+      <if test="collegeName != null">
+        college_name = #{collegeName},
+      </if>
+    </set>
+    where college_id = #{collegeId}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.edu.entity.College">
+    update college
+    set college_name = #{collegeName}
+    where college_id = #{collegeId}
+  </update>
+</mapper>

@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link rel="stylesheet" th:href="@{/css/bootstrap3.3.4.min.css}" >
+    <link rel="stylesheet" th:href="@{/css/style.min.css}" >
+    <link rel="stylesheet" th:href="@{/css/materialdesignicons.min.css}" >
+    <script type="text/javascript" th:src="@{/js/jquery.js}"></script>
+    <script type="text/javascript" th:src="@{/js/bootstrap.min.js}"></script>
+    <link rel="stylesheet" th:href="@{/css/bootstrap-table.min.css}">
+    <script th:src="@{/js/bootstrap-table.min.js}"></script>
+    <script th:src="@{/js/bootstrap-table-zh-CN.min.js}"></script>
+    <!--消息提示框插件-->
+    <script type="text/javascript" th:src="@{/js/dream-msg.min.js}"></script>
+    <!--滚动条插件-->
+    <script type="text/javascript" th:src="@{/js/perfect-scrollbar.min.js}"></script>
+    <script type="text/javascript" th:src="@{/js/main.min.js}"></script>
+    <script type="text/javascript" th:inline="javascript">
+        /*<![CDATA[*/
+        var basePath = /*[[${#httpServletRequest.getScheme() + "://" + #httpServletRequest.getServerName() + ":" + #httpServletRequest.getServerPort() + #httpServletRequest.getContextPath()}]]*/;
+        $(document).ready(function () {
+            //获取所有学期
+            $.ajax({
+                type:'get',
+                dataType:"json",
+                url:basePath+'/term/getAllTerm?notAll=1',
+                success:function (result) {
+                    $.each(result.list,function (i,term) {
+                        $("#select_term").append("<option value='"+term.termId+"'>"+term.termName+"</option>");
+                        if(term.termStatus==1){
+                            $("#currentTerm").text("当前学期为: "+term.termName);
+                        }
+                    });
+                }
+            })
+            //获取学院所有教师
+            var collegeId=[[${session.userinfo.collegeId}]]
+            $.ajax({
+                type:'get',
+                dataType:"json",
+                url:basePath+'/user/getTeachers?collegeId='+collegeId,
+                success:function (result) {
+                    $.each(result.data,function (i,teacher) {
+                        $("#select_teacher").append("<option value='"+teacher.userId+"'>"+teacher.stuName+"</option>");
+                    });
+                }
+            })
+        });
+        function submitAdd() {
+            if(confirm("确认提交？")){
+                var jsonCondition = {};
+                formdate=$("#courseForm").serializeArray();
+                $.each(formdate, function(index, element){
+                    if (jsonCondition[this.name] !== undefined) {
+                        if (!jsonCondition[this.name].push) {
+                            jsonCondition[this.name] = [jsonCondition[this.name]];
+                        }
+                        jsonCondition[this.name].push(this.value || '');
+                    } else {
+                        jsonCondition[this.name] = this.value || '';
+                    }
+                });
+                if((Number(jsonCondition.endWeight)+Number(jsonCondition.usualWeight))==1){
+                    $.ajax({
+                        type:'post',
+                        dataType:"json",
+                        data:JSON.stringify(jsonCondition),
+                        url: basePath+'/course/add',
+                        contentType: 'application/json;charset=UTF-8',
+                        success:function (result) {
+                            if(result.code==200){
+                                Dreamer.success(result.message);
+                                $("button[type='reset']").trigger("click");
+                            }else{
+                                Dreamer.error(result.message);
+                            }
+                        }
+                    });
+                }else{
+                    Dreamer.error("成绩占比格式有误！");
+                }
+            }
+        }
+        function logout() {
+            if(confirm("确认退出系统?")){
+                $.ajax({type:'get',url:basePath+'/user/logout',dataType:'json',success:function (result) {
+                        if(result.code=='200'){
+                            Dreamer.success(result.message,1000,function () {
+                                location.href=basePath+'/user/loginview';
+                            })
+                        }
+                    }});
+            }
+        }
+    </script>
+</head>
+<body>
+
+<div class="lyear-layout-web">
+    <div class="lyear-layout-container">
+        <!--左侧导航-->
+        <aside class="lyear-layout-sidebar">
+
+            <!-- logo -->
+            <div id="logo" class="sidebar-header">
+                <a href="#"><img th:src="@{/img/logo-1.png}"/></a>
+            </div>
+            <div class="lyear-layout-sidebar-scroll">
+                <nav class="sidebar-main" shiro:hasRole="教务管理员">
+                    <ul class="nav nav-drawer">
+                        <li class="nav-item active nav-item-has-subnav open">
+                            <a href="javascript:void(0)"><i class="mdi mdi-palette"></i> 课程管理</a>
+                            <ul class="nav nav-subnav active">
+                                <li><a th:href="@{/user/lookAllCourse}">查看学院所有课程</a></li>
+                                <li class="active"><a>增设课程</a></li>
+                            </ul>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+
+        </aside>
+        <!--End 左侧导航-->
+        <!--头部信息-->
+        <header class="lyear-layout-header">
+
+            <nav class="navbar navbar-default">
+                <div class="topbar">
+
+                    <div class="topbar-left">
+                        <div class="lyear-aside-toggler">
+                            <span class="lyear-toggler-bar"></span>
+                            <span class="lyear-toggler-bar"></span>
+                            <span class="lyear-toggler-bar"></span>
+                        </div>
+                    </div>
+
+                    <ul class="topbar-right">
+                        <li class="dropdown dropdown-profile">
+                            <a href="javascript:void(0)" data-toggle="dropdown">
+                                <span><span id="stuName" th:text="${session.userinfo.stuName}"></span><span class="caret"></span></span>
+                                <input type="hidden" th:value="${session.userinfo.userId}" id="UserID" />
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-right" style="margin-top: 14px;margin-left: 20px;">
+                                <li> <a th:href="@{/user/stuIndex}"><i class="mdi mdi-account"></i> 个人信息</a></li>
+                                <li> <a href="#" onclick="logout()"><i class="mdi mdi-logout-variant"></i> 退出登录</a> </li>
+                            </ul>
+                        </li>
+                    </ul>
+
+                </div>
+            </nav>
+
+        </header>
+        <!--End 头部信息-->
+
+        <!--页面主要内容-->
+        <main class="lyear-layout-content">
+
+            <div class="container-fluid">
+
+                <div class="row" shiro:hasRole="教务管理员">
+
+                    <div class="col-lg-12">
+                        <div class="card">
+                            <div class="card-header">
+                                <h4>增设课程</h4>
+
+                            </div>
+                            <div class="card-body">
+                                <p style="color: #333333;" id="currentTerm"></p>
+                                <form class="form-horizontal" id="courseForm">
+                                    <div class="form-group">
+                                        <label class="col-sm-2 control-label">课程代码</label>
+                                        <div class="col-sm-10">
+                                            <input class="form-control" name="courseCode" id="courseCode" type="text">
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label  class="col-sm-2 control-label">
+                                            课程名称
+                                        </label>
+                                        <div class="col-sm-10">
+                                            <input class="form-control" name="courseName" id="courseName" type="text"/>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="col-sm-2 control-label">
+                                            性质
+                                        </label>
+                                        <div class="col-sm-10">
+                                            选修<input type="radio" class="radio-info"   name="courseType" id="courseType1" value="选修"/>
+                                            必修<input type="radio" class="radio-info"   name="courseType" id="courseType2" value="必修"/>
+                                            限选<input type="radio" class="radio-info"   name="courseType" id="courseType3" value="限选"/>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="col-sm-2 control-label">
+                                            学分
+                                        </label>
+                                        <div class="col-sm-10">
+                                            <input type="text" class="form-control" name="courseCredit"  id="courseCredit">
+                                        </div>
+                                    </div>
+                                    <div class="form-group ">
+                                        <label class="col-sm-2 control-label">
+                                            老师
+                                        </label>
+                                        <div class="col-sm-10">
+                                            <select id="select_teacher" name="teacherId" class="form-control">
+                                                <option value="0">请选择教师</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="form-group ">
+                                        <label class="col-sm-2 control-label">
+                                            学期
+                                        </label>
+                                        <div class="col-sm-10">
+                                            <select id="select_term" name="courseTermId" class="form-control">
+                                                <option value="0">请选择学期</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="form-group ">
+                                        <label class="col-sm-2 control-label">
+                                            时间
+                                        </label>
+                                        <div class="col-sm-10">
+                                            <input type="text" class="form-control" name="courseTime" id="courseTime" placeholder="例如: 1-17周 周一1-2节">
+                                        </div>
+                                    </div>
+                                    <div class="form-group ">
+                                        <label class="col-sm-2 control-label">
+                                            地点
+                                        </label>
+                                        <div class="col-sm-10">
+                                            <input type="text" class="form-control" name="coursePlace" id="coursePlace" placeholder="例如: 信息楼3301">
+                                        </div>
+                                    </div>
+                                    <div class="form-group ">
+                                        <label class="col-sm-2 control-label">
+                                            平时占比
+                                        </label>
+                                        <div class="col-sm-4">
+                                            <input type="text" class="form-control" name="usualWeight" id="usualWeight" placeholder="用小数表示，如0.6">
+                                        </div>
+                                        <label class="col-sm-2 control-label">
+                                            期末占比
+                                        </label>
+                                        <div class="col-sm-4">
+                                            <input type="text" class="form-control" name="endWeight" id="endWeight" placeholder="用小数表示，如0.4">
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <div class="col-sm-2"></div>
+                                        <div class="col-sm-10" ><div style="float: right"><button type="button" class="btn btn-primary" onclick="submitAdd()">提交</button><button type="reset" class="btn btn-danger">重置</button></div></div>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+        <!--End 页面主要内容-->
+    </div>
+</div>
+</body>
+</html>

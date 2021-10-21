@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link rel="stylesheet" th:href="@{/css/bootstrap3.3.4.min.css}" >
+    <link rel="stylesheet" th:href="@{/css/style.min.css}" >
+    <link rel="stylesheet" th:href="@{/css/materialdesignicons.min.css}" >
+    <script type="text/javascript" th:src="@{/js/jquery.js}"></script>
+    <script type="text/javascript" th:src="@{/js/bootstrap.min.js}"></script>
+    <link rel="stylesheet" th:href="@{/css/bootstrap-table.min.css}">
+    <script th:src="@{/js/bootstrap-table.min.js}"></script>
+    <script th:src="@{/js/bootstrap-table-zh-CN.min.js}"></script>
+    <!--消息提示框插件-->
+    <script type="text/javascript" th:src="@{/js/dream-msg.min.js}"></script>
+    <!--滚动条插件-->
+    <script type="text/javascript" th:src="@{/js/perfect-scrollbar.min.js}"></script>
+    <script type="text/javascript" th:src="@{/js/main.min.js}"></script>
+    <script type="text/javascript" th:inline="javascript">
+        /*<![CDATA[*/
+        var basePath = /*[[${#httpServletRequest.getScheme() + "://" + #httpServletRequest.getServerName() + ":" + #httpServletRequest.getServerPort() + #httpServletRequest.getContextPath()}]]*/;
+        $(document).ready(function () {
+            $.ajax({
+                type:'get',
+                dataType:"json",
+                url:basePath+'/term/getAllTerm',
+                success:function (result) {
+                    $.each(result.list,function (i,term) {
+                        $("#select_term").append("<option value='"+term.termId+"'>"+term.termName+"</option>");
+                        if(term.termStatus==1){
+                            $("#currentTerm").text("当前学期为: "+term.termName);
+                        }
+                    });
+                }
+            })
+        });
+        function findAllCourse() {
+            var termId = $("#select_term").val();
+            initTable(termId);
+        }
+        function refresh() {//刷新表格数据
+            var userId=$("#UserID").val();
+            var termId = $("#select_term").val();
+            $.ajax({
+                type:'get',
+                url:basePath+'/course/showAllStart?userId='+userId+'&term='+termId,
+                dataType:'json',
+                success:function (data) {
+                    $('#index_tab').bootstrapTable("refresh", data); //刷新
+                }
+            })
+        }
+        function initTable(termId){
+            var UserId =$("#UserID").val();
+            function addFunctionAlty(value, row, index) {
+                return [
+                    '<button data-toggle="modal" data-target="#myModal2"  onclick="update('+index+')"  id="update" type="button" class="btn btn-sm btn-info">修改</button>',
+                    '<button  onclick="remove('+index+')" id="remove" type="button" class="btn btn-sm btn-danger">删除</button>'
+                ].join('');
+            }
+            //先销毁表格
+            $('#index_tab').bootstrapTable('destroy');
+            $('#index_tab').bootstrapTable({
+                method: 'get', // 服务器数据的请求方式 get or post
+                url: basePath+'/course/showAllStart?userId='+UserId+'&term='+termId, // 服务器数据的加载地址
+                pagination: true, //是否显示分页（*）
+                cache: false, //是否使用缓存，默认为true，所以一般情况下需要设置一下这个属性（*）
+                sidePagination: "server", //分页方式：client客户端分页，server服务端分页（*）
+                pageNumber: 1,//初始化加载第一页，默认第一页
+                pageSize: 5, //每页的记录行数（*）
+                pageList: [5, 10, 20, 30], //可供选择的每页的行数（*）
+                silent: true,//刷新时页面不会闪动，效果较好
+                contentType: "application/x-www-form-urlencoded",//ajax的请求，表单提交或上传文件的常用的资源类型。
+                queryParams : function(params) {//上传服务器的参数
+                    var temp = {
+                        limit : this.limit, // 页面大小
+                        offset : this.offset, // 页码
+                        pageNum : this.pageNumber,//后台分页的页码
+                        pageSize : this.pageSize,//后台分页的页面大小
+                    };
+                    return temp;
+                },
+                responseHandler: function (res) {
+                    return{
+                        "rows":res.data.list,
+                        "total":res.data.total
+                    }
+                },
+                columns: [{
+                    field: 'course.courseId',
+                    title: '序号',
+                    align:'center'
+                },{
+                    field: 'course.courseCode',
+                    title: '课程代码',
+                    align:'center'
+                }, {
+                    field: 'course.courseName',
+                    title: '课程名称',
+                    align:'center'
+                },{
+                    field:'course.courseType',
+                    title:'性质',
+                    align:'center'
+                },{
+                    field:'course.courseCredit',
+                    title:'学分',
+                    align:'center'
+                },{
+                    field:'college.collegeName',
+                    title:'学院',
+                    align:'center'
+                },{
+                    field:'teacher.stuName',
+                    title:'老师',
+                    align:'center'
+                },{
+                    field:'course.courseTerm',
+                    title:'学期',
+                    align:'center'
+                },{
+                    field:'course.courseTime',
+                    title:'时间',
+                    align:'center'
+                }, {
+                    field: 'course.coursePlace',
+                    title: '地点',
+                    align:'center'
+                },{
+                    field:'course.usualWeight',
+                    title:'平时占比',
+                    align:'center'
+                },{
+                    field:'course.endWeight',
+                    title:'期末占比',
+                    align:'center'
+                },{
+                    field: 'operate',
+                    title: '操作',
+                    align:'center',
+                    formatter: addFunctionAlty,//表格中增加按钮
+                }
+                ]
+            });
+            /*]]>*/
+        }
+        function update(index) {
+            var data = $('#index_tab').bootstrapTable('getData');//获取表格数据
+            var course = data[index]['course'];//获取表格某一列的值
+            var college =data[index]['college'];
+            var teacher = data[index]['teacher'];
+            $("#courseId").val(course.courseId);$("#courseCode").val(course.courseCode);$("#courseName").val(course.courseName);
+            $("#courseType").val(course.courseType);$("#courseCredit").val(course.courseCredit);$("#collegeId").val(college.collegeId);
+            $("#collegeName").val(college.collegeName);$("#teacherName").val(teacher.stuName);$("#courseTerm").val(course.courseTerm);
+            $("#courseTime").val(course.courseTime);$("#coursePlace").val(course.coursePlace);$("#usualWeight").val(course.usualWeight);
+            $("#endWeight").val(course.endWeight);$("#teacherId").val(teacher.userId);$("#courseTermId").val(course.courseTermId);
+        }
+        function submitUpdate() {
+            if(confirm("确认要保存修改？")){
+                var jsonCondition = {};
+                formdate=$("#courseForm").serializeArray();
+                $.each(formdate, function(index, element){
+                    if (jsonCondition[this.name] !== undefined) {
+                        if (!jsonCondition[this.name].push) {
+                            jsonCondition[this.name] = [jsonCondition[this.name]];
+                        }
+                        jsonCondition[this.name].push(this.value || '');
+                    } else {
+                        jsonCondition[this.name] = this.value || '';
+                    }
+                });
+                if((Number(jsonCondition.endWeight)+Number(jsonCondition.usualWeight))==1){
+                    $.ajax({
+                        type:'post',
+                        dataType:"json",
+                        data:JSON.stringify(jsonCondition),
+                        url: basePath+'/course/update',
+                        contentType: 'application/json;charset=UTF-8',
+                        success:function (result) {
+                             if(result.code==200){
+                                 Dreamer.success(result.message)
+                                 refresh();
+                             }else{
+                                 Dreamer.error(result.message);
+                             }
+                        }
+                    })
+                }else{
+                    Dreamer.error("成绩占比格式有误！");
+                }
+            }
+        }
+        function remove(index) {
+            var data = $('#index_tab').bootstrapTable('getData');//获取表格数据
+            var courseId = data[index]['course']['courseId'];//获取表格某一列的值
+            if(confirm("删除不可以恢复,确认要删除?")){
+                $.ajax({
+                    type: 'delete',
+                    url:basePath+'/course/delete',
+                    dataType: 'json',
+                    data:{
+                        'courseId':courseId
+                    },
+                    success:function (result) {
+                            Dreamer.success(result.message);
+                            refresh();//刷新表格数据
+                            if(result.code==500){
+                                Dreamer.error(result.message);
+                            }
+                    }
+                });
+            }
+        }
+        function logout() {
+            if(confirm("确认退出系统?")){
+                $.ajax({type:'get',url:basePath+'/user/logout',dataType:'json',success:function (result) {
+                        if(result.code=='200'){
+                            Dreamer.success(result.message,1000,function () {
+                                location.href=basePath+'/user/loginview';
+                            })
+                        }
+                    }});
+            }
+        }
+    </script>
+</head>
+<body>
+
+<div class="lyear-layout-web">
+    <div class="lyear-layout-container">
+        <!--左侧导航-->
+        <aside class="lyear-layout-sidebar">
+
+            <!-- logo -->
+            <div id="logo" class="sidebar-header">
+                <a href="#"><img th:src="@{/img/logo-1.png}"/></a>
+            </div>
+            <div class="lyear-layout-sidebar-scroll">
+                <nav class="sidebar-main" shiro:hasRole="教务管理员">
+                    <ul class="nav nav-drawer">
+                        <li class="nav-item active nav-item-has-subnav open">
+                            <a href="javascript:void(0)"><i class="mdi mdi-palette"></i> 课程管理</a>
+                            <ul class="nav nav-subnav active">
+                                <li class="active"><a href="#">查看学院所有课程</a></li>
+                                <li><a th:href="@{/user/addCourse}">增设课程</a></li>
+                            </ul>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+
+        </aside>
+        <!--End 左侧导航-->
+        <!--头部信息-->
+        <header class="lyear-layout-header">
+
+            <nav class="navbar navbar-default">
+                <div class="topbar">
+
+                    <div class="topbar-left">
+                        <div class="lyear-aside-toggler">
+                            <span class="lyear-toggler-bar"></span>
+                            <span class="lyear-toggler-bar"></span>
+                            <span class="lyear-toggler-bar"></span>
+                        </div>
+                    </div>
+
+                    <ul class="topbar-right">
+                        <li class="dropdown dropdown-profile">
+                            <a href="javascript:void(0)" data-toggle="dropdown">
+                                <span><span id="stuName" th:text="${session.userinfo.stuName}"></span><span class="caret"></span></span>
+                                <input type="hidden" th:value="${session.userinfo.userId}" id="UserID" />
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-right" style="margin-top: 14px;margin-left: 20px;">
+                                <li> <a th:href="@{/user/stuIndex}"><i class="mdi mdi-account"></i> 个人信息</a></li>
+                                <li> <a href="#" onclick="logout()"><i class="mdi mdi-logout-variant"></i> 退出登录</a> </li>
+                            </ul>
+                        </li>
+                    </ul>
+
+                </div>
+            </nav>
+
+        </header>
+        <!--End 头部信息-->
+
+        <!--页面主要内容-->
+        <main class="lyear-layout-content">
+
+            <div class="container-fluid">
+
+                <div class="row" shiro:hasRole="教务管理员">
+
+                    <div class="col-lg-12">
+                        <div class="card">
+                            <div class="card-header">
+                                <h4>学院课程管理</h4>
+
+                            </div>
+                            <div class="card-body">
+                                <p style="color: #333333;" id="currentTerm"></p>
+                                <div class="col-xs-2">
+                                    <select id="select_term" class="form-control" placeholder="请选择学期">
+
+                                    </select>
+                                </div>
+                                <input type="button" class="btn btn-info" value="确认" onclick="findAllCourse()" />
+                                <div class="table-responsive" >
+                                    <table class="table table-bordered" id="index_tab">
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal fade" id="myModal2" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                                    <h4 class="modal-title" id="myModalLabel2">课程成绩</h4>
+                                </div>
+                                <div class="modal-body">
+                                    <h4 id="courseName1"></h4>
+                                    <h3 id="teacherInfo"></h3>
+                                        <form class="form-horizontal" id="courseForm">
+                                            <div class="form-group">
+                                                <label class="col-sm-2 control-label">课程编号</label>
+                                                <div class="col-sm-4">
+                                                    <input class="form-control" name="courseId" id="courseId" type="text">
+                                                </div>
+                                                <label class="col-sm-2 control-label">课程代码</label>
+                                                <div class="col-sm-4">
+                                                    <input class="form-control" name="courseCode" id="courseCode" type="text">
+                                                </div>
+                                            </div>
+                                            <div class="form-group">
+                                                <label  class="col-sm-2 control-label">
+                                                    课程名称
+                                                </label>
+                                                <div class="col-sm-4">
+                                                    <input class="form-control" name="courseName" id="courseName" type="text"/>
+                                                </div>
+                                                <label class="col-sm-2 control-label">
+                                                    性质
+                                                </label>
+                                                <div class="col-sm-4">
+                                                    <input type="text" class="form-control" name="courseType"  id="courseType">
+                                                </div>
+                                            </div>
+                                            <div class="form-group">
+                                                <label class="col-sm-2 control-label">
+                                                   学分
+                                                </label>
+                                                <div class="col-sm-4">
+                                                    <input type="text" class="form-control" name="courseCredit"  id="courseCredit">
+                                                </div>
+                                                <label class="col-sm-2 control-label">
+                                                    学院
+                                                </label>
+                                                <div class="col-sm-4">
+                                                    <input type="text" class="form-control" name="collegeName" id="collegeName">
+                                                    <input class="form-control" name="collegeId" id="collegeId" type="hidden">
+                                                </div>
+                                            </div>
+                                            <div class="form-group ">
+                                                <label class="col-sm-2 control-label">
+                                                    老师
+                                                </label>
+                                                <div class="col-sm-4">
+                                                    <input type="text" class="form-control" name="teacherName" id="teacherName">
+                                                    <input class="form-control" name="teacherId" id="teacherId" type="hidden">
+                                                </div>
+                                                <label class="col-sm-2 control-label">
+                                                    地点
+                                                </label>
+                                                <div class="col-sm-4">
+                                                    <input type="text" class="form-control" name="coursePlace" id="coursePlace" placeholder="例如: 信息楼3301">
+                                                </div>
+                                            </div>
+                                            <div class="form-group ">
+                                                <label class="col-sm-2 control-label">
+                                                    时间
+                                                </label>
+                                                <div class="col-sm-10">
+                                                    <input type="text" class="form-control" name="courseTime" id="courseTime" placeholder="例如: 1-17周 周一1-2节">
+                                                </div>
+                                            </div>
+
+                                            <div class="form-group">
+                                                <label class="col-sm-2 control-label">
+                                                    学期
+                                                </label>
+                                                <div class="col-sm-10">
+                                                    <input type="text" class="form-control" name="courseTerm" id="courseTerm">
+                                                    <input class="form-control" name="courseTermId" id="courseTermId" type="hidden">
+                                                </div>
+                                            </div>
+
+                                            <div class="form-group ">
+                                                <label class="col-sm-2 control-label">
+                                                   平时占比
+                                                </label>
+                                                <div class="col-sm-10">
+                                                    <input type="text" class="form-control" name="usualWeight" id="usualWeight" placeholder="用小数表示，如0.5、0.6">
+                                                </div>
+                                            </div>
+                                            <div class="form-group ">
+                                                <label class="col-sm-2 control-label">
+                                                    期末占比
+                                                </label>
+                                                <div class="col-sm-10">
+                                                    <input type="text" class="form-control" name="endWeight" id="endWeight" placeholder="用小数表示，如0.5、0.6">
+                                                </div>
+                                            </div>
+                                        </form>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                                    <button type="button" class="btn btn-primary" onclick="submitUpdate()">保存修改</button>
+                                </div>
+                            </div><!-- /.modal-content -->
+                        </div><!-- /.modal -->
+                    </div>
+                </div>
+            </div>
+        </main>
+        <!--End 页面主要内容-->
+    </div>
+</div>
+</body>
+</html>

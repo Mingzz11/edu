@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<div th:fragment="stuInfo">
+    <script type="text/javascript" th:inline="javascript">
+        /*<![CDATA[*/
+        var basePath = /*[[${#httpServletRequest.getScheme() + "://" + #httpServletRequest.getServerName() + ":" + #httpServletRequest.getServerPort() + #httpServletRequest.getContextPath()}]]*/;
+        $(document).ready(function () {
+            $.ajax({
+                type:'post',
+                dataType:"json",
+                url: basePath+'/user/userInfo',
+                success:function (result) {
+                    if (result.code=='200'){
+                        $("#college").text(result.data.college.collegeName);
+                        $.each(result.data.thisCourse.list,function (i,list) {
+                            $("#info-panel2").append('<p style="color: #333333;">'+ list.course.courseTime +'--'+ list.course.courseName +'--'+ list.course.coursePlace +'--'+list.teacher.stuName+'</p>')
+                        });
+                    }
+                }
+            });
+        });
+        function logout() {
+            if(confirm("确认退出系统?")){
+                $.ajax({type:'get',url:basePath+'/user/logout',dataType:'json',success:function (result) {
+                        if(result.code=='200'){
+                            Dreamer.success(result.message,1000,function () {
+                                location.href=basePath+'/user/loginview';
+                            })
+                        }
+                    }});
+            }
+        }
+    </script>
+</div>
+</body>
+</html>
